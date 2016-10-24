@@ -25,7 +25,7 @@ namespace RWTag.MP4
         {
             RWTag.Tag tag = new RWTag.Tag();
 
-            Atoms atoms = Parse();
+            Atoms atoms = Parse(false);
 
 
             return tag;
@@ -38,10 +38,18 @@ namespace RWTag.MP4
 
         public override void Write(RWTag.Tag Tag)
         {
-            throw new NotImplementedException();
+            Atoms atoms = Parse(true);
+            atoms.RemoveAt(3);
+            atoms.RemoveAt(2);
+            atoms.RemoveAt(0);
+
+            Stream.Position = 0;
+            Stream.SetLength(atoms.GetLength());
+            Stream.Write(atoms.ToBytes(), 0, atoms.GetLength());
+            Stream.Flush();
         }
 
-        private Atoms Parse()
+        private Atoms Parse(bool ReadData)
         {
             Stream.Seek(0, SeekOrigin.Begin);
 
@@ -50,31 +58,60 @@ namespace RWTag.MP4
             byte[] header = new byte[8];
             while(Stream.Read(header, 0, 8) == 8)
             {
-                Atom atom = new Atom(Encode, header);
-                DeepSearch(atom);
+                Atom atom = new Atom(Encode, Stream.Position - 8, header);
+                DeepSearch(atom, ReadData);
                 atoms.Add(atom);
             }
 
             return atoms;
         }
 
-        private void DeepSearch(Atom Atom)
+        private long DeepSearch(Atom Atom, bool ReadData)
         {
+            long count = 0;
+
             byte[] header = new byte[8];
-            while (Stream.Read(header, 0, 8) == 8)
+            while (Atom.Length > count)
             {
-                Atom child = new Atom(Encode, header);
+                Stream.Read(header, 0, 8);
+                count += 8;
+
+                Atom child = new Atom(Encode, Stream.Position - 8, header);
+                System.Diagnostics.Debug.WriteLine(child.Name + " - " + child.Offset);
                 if (IsCorrectName(child.Name))
                 {
-                    DeepSearch(child);
+                    count += DeepSearch(child, ReadData);
                     Atom.Children.Add(child);
                 }
                 else
                 {
-                    Stream.Seek(Atom.Length - 16, SeekOrigin.Current);
+                    count = Atom.Length;
+
+                    switch (Atom.Name)
+                    {
+                        case "meta":
+                            Atom.Data = new byte[Atom.Length - 8];
+                            Array.Copy(header, 0, Atom.Data, 0, 8);
+                            Stream.Read(Atom.Data, 8, Atom.Length - 16);
+                            metaAtom meta = new metaAtom(Atom);
+                            Atom = meta;
+                            break;
+                        default:
+                            if (ReadData)
+                            {
+                                Atom.Data = new byte[Atom.Length - 8];
+                                Array.Copy(header, 0, Atom.Data, 0, 8);
+                                Stream.Read(Atom.Data, 8, Atom.Length - 16);
+                            }
+                            else
+                                Stream.Seek(Atom.Length - 16, SeekOrigin.Current);
+                            break;
+                    }
                     break;
                 }
             }
+
+            return count;
         }
 
         private bool IsCorrectName(string Name)

@@ -123,7 +123,7 @@
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(276, 19);
             this.textBox3.TabIndex = 8;
-            this.textBox3.Text = "03 Cool Kids.m4a";
+            this.textBox3.Text = "Test.bin";
             // 
             // pictureBox2
             // 
