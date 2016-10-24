@@ -49,7 +49,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(276, 19);
             this.textBox1.TabIndex = 0;
-            this.textBox1.Text = "03 Style.m4a";
+            this.textBox1.Text = "03 Cool Kids.m4a";
             // 
             // button1
             // 
@@ -123,7 +123,7 @@
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(276, 19);
             this.textBox3.TabIndex = 8;
-            this.textBox3.Text = "03 Style.m4a";
+            this.textBox3.Text = "03 Cool Kids.m4a";
             // 
             // pictureBox2
             // 

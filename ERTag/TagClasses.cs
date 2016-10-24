@@ -225,7 +225,7 @@ namespace RWTag
             set
             {
                 if (bs != null)
-                    bs.Position = 0;
+                    bs.Position = value;
             }
         }
 

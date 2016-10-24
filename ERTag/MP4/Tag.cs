@@ -12,8 +12,6 @@ namespace RWTag.MP4
     {
         public Regex AtomNameRegex { get; set; } = new Regex("^[a-z][a-z][a-z][a-z]$");
 
-        public string[] ReduceAtoms { get; set; } = new string[] { "free", "mdat", "data" };
-
         public Tag(SettableStream Stream) : base(Stream) { Encode = Encoding.UTF8; }
 
         public override string[] Extensions { get; } = new string[] { ".mp4", ".m4a" };
@@ -48,50 +46,51 @@ namespace RWTag.MP4
             Stream.Seek(0, SeekOrigin.Begin);
 
             Atoms atoms = new Atoms();
-            BinaryReader br = new BinaryReader(Stream, Encode, true);
+
             byte[] header = new byte[8];
-            while(br.Read(header, 0, 8) == 8)
+            while(Stream.Read(header, 0, 8) == 8)
             {
                 Atom atom = new Atom(Encode, header);
-                if (!ReduceAtoms.Contains(atom.Name) && atom.Length - 8 > 0 && Stream.Length > Stream.Position + atom.Length)
-                {
-                    atom.Data = br.ReadBytes(atom.Length - 8);
-
-                    MemoryStream ms = new MemoryStream(atom.Data);
-                    DeepSearch(atom, ms);
-                    ms.Dispose();
-
-                    atoms.Add(atom);
-                }
+                DeepSearch(atom);
+                atoms.Add(atom);
             }
 
             return atoms;
         }
 
-        private void DeepSearch(Atom Atom, MemoryStream DataStream)
+        private void DeepSearch(Atom Atom)
         {
-            if (DataStream.Length - DataStream.Position < 8) return;
-             
-            BinaryReader br = new BinaryReader(DataStream, Encode, true);
-            Atom atom = new Atom(Encode, br.ReadBytes(8));
-
-            if (AtomNameRegex.IsMatch(atom.Name) && atom.Length - 8 > 0)
+            byte[] header = new byte[8];
+            while (Stream.Read(header, 0, 8) == 8)
             {
-                System.Diagnostics.Debug.WriteLine(atom.Name);
-                if (!ReduceAtoms.Contains(atom.Name))
+                Atom child = new Atom(Encode, header);
+                if (IsCorrectName(child.Name))
                 {
-                    if (DataStream.Length <= DataStream.Position + atom.Length)
-                        return;
-                    Atom.Children.Add(atom);
-                    atom.Data = br.ReadBytes(atom.Length - 8);
-                    br.Dispose();
-
-                    MemoryStream ms = new MemoryStream(atom.Data);
-                    DeepSearch(atom, ms);
+                    DeepSearch(child);
+                    Atom.Children.Add(child);
+                }
+                else
+                {
+                    Stream.Seek(Atom.Length - 16, SeekOrigin.Current);
+                    break;
                 }
             }
+        }
 
-            DeepSearch(Atom, DataStream);
+        private bool IsCorrectName(string Name)
+        {
+            if (Name.Length == 4)
+            {
+                int min = 'a', max = 'z';
+                for(int i = 0;Name.Length > i; i++)
+                {
+                    if (min > Name[i]) return false;
+                    if (max < Name[i]) return false;
+                }
+
+                return true;
+            }
+            else return false;
         }
     }
 }

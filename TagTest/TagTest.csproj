@@ -34,7 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LAPP">
-      <HintPath>..\..\LimpidAudioPlayer\LimpidAudioPlayer\LAPP\bin\Debug\LAPP.dll</HintPath>
+      <HintPath>..\..\LimpidAudioPlayer\LAPP\bin\Debug\LAPP.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
