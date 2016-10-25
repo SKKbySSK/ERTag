@@ -33,6 +33,29 @@ namespace RWTag.MP4
             return null;
         }
 
+        public void SetAtomByPath(Atom Atom, string Path)
+        {
+            string[] paths = Path.Split(new char[] { '/', '\\' },
+                StringSplitOptions.RemoveEmptyEntries);
+
+            Atoms Parent = this;
+            for (int i = 0; paths.Length > i; i++)
+            {
+                int ind = FindIndex(paths[i], Parent);
+
+                if (paths.Length - 1 == i)
+                {
+                    Parent[ind] = Atom;
+                    UpdateAtomData();
+                }
+
+                if (ind > -1)
+                    Parent = Parent[ind].Children;
+                else
+                    return;
+            }
+        }
+
         private Atom Find(string Name, Atoms Parent)
         {
             for(int i = 0;Parent.Count > i; i++)
@@ -41,6 +64,16 @@ namespace RWTag.MP4
                     return Parent[i];
             }
             return null;
+        }
+
+        public int FindIndex(string Name, Atoms Parent)
+        {
+            for (int i = 0; Parent.Count > i; i++)
+            {
+                if (Parent[i].Name == Name)
+                    return i;
+            }
+            return -1;
         }
 
         public byte[] ToBytes()
@@ -248,19 +281,63 @@ namespace RWTag.MP4
         {
             this.ilst.Data.Clear();
 
-            List<byte> ilst = new List<byte>();
-            ilst.AddRange(hdlr.ToBytes());
+            List<ilstFrame.ilstAtom> ilst = new List<ilstFrame.ilstAtom>();
+            if (!string.IsNullOrEmpty(Tag.Title)) ilst.Add(GenerateAtom("A96E616D", Tag.Title));
+            if (!string.IsNullOrEmpty(Tag.Album)) ilst.Add(GenerateAtom("A9616C62", Tag.Album));
+            if (!string.IsNullOrEmpty(Tag.Artist)) ilst.Add(GenerateAtom("A9415254", Tag.Artist));
+            if (!string.IsNullOrEmpty(Tag.Genre)) ilst.Add(GenerateAtom("A967656E", Tag.Genre));
+            if (!string.IsNullOrEmpty(Tag.Lyrics)) ilst.Add(GenerateAtom("A96C7972", Tag.Lyrics));
 
-            for(int i = 0; 9 > i; i++)
+            int len = 12;
+            len += hdlr.Length;
+            for (int i = 0; ilst.Count > i; i++)
+                len += ilst[i].Length;
+
+            Data = new byte[len];
+            MemoryStream ms = new MemoryStream(Data);
+            for (int i = 0; ilst.Count > i; i++)
+                ms.Write(ilst[i].ToBytes(), 0, ilst[i].Length);
+            ms.Dispose();
+
+            Length = len;
+
+            this.ilst.Data = ilst;
+        }
+
+        private ilstFrame.ilstAtom GenerateAtom(string Hex, string Value)
+        {
+            ilstFrame.ilstAtom atom = new ilstFrame.ilstAtom(Encode);
+
+            const int minSize = 24;
+            List<byte> atomb = new List<byte>();
+
+            byte[] value = Encode.GetBytes(Value);
+
+            atomb.AddRange(BitConverter.GetBytes(minSize + value.Length));
+            atomb.AddRange(GetBytesFromString(Hex));
+            atomb.AddRange(BitConverter.GetBytes(minSize + value.Length - 8));
+            atomb.AddRange(new byte[8]);
+            atomb.AddRange(value);
+
+            atom.Value = atomb.ToArray();
+            atom.Length = atomb.Count;
+            atom.VersionAndFlags = new byte[4];
+            atom.Name = GetBytesFromString(Hex);
+
+            return atom;
+        }
+
+        private byte[] GetBytesFromString(string HexString)
+        {
+            if (HexString.Length % 2 == 0)
             {
-                switch (i)
-                {
-                    case 0:
-                        if(!string.IsNullOrEmpty(Tag.Title))
-
-                        break;
-                }
+                byte[] bytes = new byte[HexString.Length / 2];
+                for (int i = 0; bytes.Length > i; i++)
+                    bytes[i] = Convert.ToByte(HexString.Substring(i * 2, 2), 16);
+                return bytes;
             }
+            else
+                return null;
         }
 
         public override byte[] ToBytes()
@@ -274,6 +351,11 @@ namespace RWTag.MP4
             ret.AddRange(ilst.ToBytes());
 
             return ret.ToArray();
+        }
+
+        public override string ToString()
+        {
+            return "metaAtom";
         }
 
         public Atom hdlr { get; set; }

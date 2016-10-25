@@ -22,8 +22,9 @@ namespace TagTest
         {
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
+
             RWTag.TagReader Reader = new RWTag.TagReader();
-            RWTag.Tag tag = Reader.GetTag(new FileStream(textBox1.Text, FileMode.OpenOrCreate), Path.GetExtension(textBox1.Text));
+            RWTag.Tag tag = Reader.GetTag(new FileStream(textBox1.Text, FileMode.OpenOrCreate), ".m4a");
             Reader.Dispose();
 
             sw.Stop();

@@ -49,7 +49,7 @@ namespace RWTag.MP4
             {
                 metaAtom meta = new metaAtom(metaO);
                 meta.SetTag(Tag);
-                metaO = meta;
+                atoms.SetAtomByPath(meta, "moov/udta/meta");
             }
 
             Stream.Seek(0, SeekOrigin.Begin);
@@ -61,7 +61,7 @@ namespace RWTag.MP4
             Stream.Write(atoms.ToBytes(), 0, length);
         }
 
-        private Atoms Parse(bool ReadData)
+        public Atoms Parse(bool ReadData)
         {
             Stream.Seek(0, SeekOrigin.Begin);
 

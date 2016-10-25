@@ -49,7 +49,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(276, 19);
             this.textBox1.TabIndex = 0;
-            this.textBox1.Text = "03 Cool Kids.m4a";
+            this.textBox1.Text = "Test.bin";
             // 
             // button1
             // 
