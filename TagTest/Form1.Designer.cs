@@ -87,8 +87,7 @@
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(276, 19);
             this.textBox2.TabIndex = 3;
-            this.textBox2.Text = "C:\\Users\\skkby\\Music\\iTunes\\iTunes Media\\Music\\Jonathan Morali, Syd Matters, José" +
-    " Gonzá\\Life is Strange Soundtrack";
+            this.textBox2.Text = "C:\\Users\\skkby\\Music\\Echosmith\\Talking Dreams";
             // 
             // label1
             // 

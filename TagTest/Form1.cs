@@ -20,33 +20,37 @@ namespace TagTest
 
         private void button1_Click(object sender, EventArgs e)
         {
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
             RWTag.TagReader Reader = new RWTag.TagReader();
             RWTag.Tag tag = Reader.GetTag(new FileStream(textBox1.Text, FileMode.OpenOrCreate), Path.GetExtension(textBox1.Text));
-            if (tag.Image != null) pictureBox1.Image = (Image)new ImageConverter().ConvertFrom(tag.Image);
             Reader.Dispose();
+
+            sw.Stop();
+            label1.Text = sw.ElapsedMilliseconds.ToString();
+
+            if (tag.Image != null) pictureBox1.Image = (Image)new ImageConverter().ConvertFrom(tag.Image);
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            RWTag.MP4.Tag tag = new RWTag.MP4.Tag(new RWTag.SettableStream(new FileStream(textBox3.Text, FileMode.OpenOrCreate, FileAccess.ReadWrite)));
-            tag.Write(new RWTag.Tag());
-            tag.Dispose();
-            //RWTag.Tag tag = new RWTag.Tag();
-            //tag.Title = "Test";
-            //tag.Album = "Album";
-            //tag.Comment = "Nothing";
-            //tag.Date = DateTime.Now;
-            //tag.DiscNumber = 1;
-            //tag.TotalDiscNumber = 1;
-            //tag.Track = 40;
-            //tag.TotalTrack = 50;
-            //tag.Genre = "カントリー";
-            //tag.Artist = "Kaisei Sunaga";
-            //tag.ImageMIMEType = RWTag.ImageMIME.jpeg;
-            //tag.Image = GetBytes(pictureBox2.Image);
-            //tag.ImageDescription = "Cover";
-            //tagW.Write(tag);
-            //tagW.Dispose();
+            RWTag.MP4.Tag tagW = new RWTag.MP4.Tag(new RWTag.SettableStream(new FileStream(textBox3.Text, FileMode.OpenOrCreate, FileAccess.ReadWrite)));
+            RWTag.Tag tag = new RWTag.Tag();
+            tag.Title = "Test";
+            tag.Album = "Album";
+            tag.Comment = "Nothing";
+            tag.Date = DateTime.Now;
+            tag.DiscNumber = 1;
+            tag.TotalDiscNumber = 1;
+            tag.Track = 40;
+            tag.TotalTrack = 50;
+            tag.Genre = "カントリー";
+            tag.Artist = "Kaisei Sunaga";
+            tag.ImageMIMEType = RWTag.ImageMIME.jpeg;
+            tag.Image = GetBytes(pictureBox2.Image);
+            tag.ImageDescription = "Cover";
+            tagW.Write(tag);
+            tagW.Dispose();
         }
 
         private byte[] GetBytes(Image Image)
@@ -71,7 +75,7 @@ namespace TagTest
 
         private void button3_Click(object sender, EventArgs e)
         {
-            string[] files = Directory.GetFiles(textBox2.Text, "*.mp3");
+            string[] files = Directory.GetFiles(textBox2.Text, "*.m4a");
 
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();

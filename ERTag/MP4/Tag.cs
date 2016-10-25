@@ -26,7 +26,12 @@ namespace RWTag.MP4
             RWTag.Tag tag = new RWTag.Tag();
 
             Atoms atoms = Parse(false);
-
+            Atom metaO = atoms.FindAtomByPath("moov/udta/meta");
+            if(metaO != null)
+            {
+                metaAtom meta = new metaAtom(metaO);
+                tag = meta.GetTag();
+            }
 
             return tag;
         }
@@ -39,14 +44,21 @@ namespace RWTag.MP4
         public override void Write(RWTag.Tag Tag)
         {
             Atoms atoms = Parse(true);
-            atoms.RemoveAt(3);
-            atoms.RemoveAt(2);
-            atoms.RemoveAt(0);
+            Atom metaO = atoms.FindAtomByPath("moov/udta/meta");
+            if (metaO != null)
+            {
+                metaAtom meta = new metaAtom(metaO);
+                meta.SetTag(Tag);
+                metaO = meta;
+            }
 
-            Stream.Position = 0;
-            Stream.SetLength(atoms.GetLength());
-            Stream.Write(atoms.ToBytes(), 0, atoms.GetLength());
-            Stream.Flush();
+            Stream.Seek(0, SeekOrigin.Begin);
+
+            atoms.UpdateAtomData();
+
+            int length = atoms.GetLength();
+            Stream.SetLength(length);
+            Stream.Write(atoms.ToBytes(), 0, length);
         }
 
         private Atoms Parse(bool ReadData)
@@ -77,7 +89,6 @@ namespace RWTag.MP4
                 count += 8;
 
                 Atom child = new Atom(Encode, Stream.Position - 8, header);
-                System.Diagnostics.Debug.WriteLine(child.Name + " - " + child.Offset);
                 if (IsCorrectName(child.Name))
                 {
                     count += DeepSearch(child, ReadData);
@@ -93,8 +104,6 @@ namespace RWTag.MP4
                             Atom.Data = new byte[Atom.Length - 8];
                             Array.Copy(header, 0, Atom.Data, 0, 8);
                             Stream.Read(Atom.Data, 8, Atom.Length - 16);
-                            metaAtom meta = new metaAtom(Atom);
-                            Atom = meta;
                             break;
                         default:
                             if (ReadData)

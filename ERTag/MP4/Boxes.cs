@@ -11,32 +11,36 @@ namespace RWTag.MP4
     //cref=http://www.mp4ra.org/atoms.html
     public class Atoms : List<Atom>
     {
-        public bool RemoveAtom(string Name, bool SearchChildren)
+        public Atom FindAtomByPath(string Path)
         {
-            if (Name.Length == 4)
-            {
-                if (!SearchChildren)
-                {
-                    for (int i = 0; Count > i; i++)
-                    {
-                        if (this[i].Name == Name)
-                        {
-                            RemoveAt(i);
-                            UpdateAtomData();
-                            return true;
-                        }
-                    }
+            string[] paths = Path.Split(new char[] { '/', '\\' },
+                StringSplitOptions.RemoveEmptyEntries);
 
-                    return false;
-                }
+            Atoms Parent = this;
+            for(int i = 0;paths.Length > i; i++)
+            {
+                Atom ret = Find(paths[i], Parent);
+
+                if (paths.Length - 1 == i)
+                    return ret;
+
+                if (ret != null)
+                    Parent = ret.Children;
                 else
-                {
-                    //TODO Implement
-                    return false;
-                }
+                    return null;
             }
-            else
-                return false;
+
+            return null;
+        }
+
+        private Atom Find(string Name, Atoms Parent)
+        {
+            for(int i = 0;Parent.Count > i; i++)
+            {
+                if (Parent[i].Name == Name)
+                    return Parent[i];
+            }
+            return null;
         }
 
         public byte[] ToBytes()
@@ -187,6 +191,91 @@ namespace RWTag.MP4
                 throw new TagReaderException("Failed to read meta data");
         }
 
+        public RWTag.Tag GetTag()
+        {
+            RWTag.Tag tag = new RWTag.Tag();
+
+            if (ilst.Data.Count > 0)
+                tag.Name = "MP4";
+
+            for(int i = 0;ilst.Data.Count > i; i++)
+            {
+                ilstFrame.ilstAtom f = ilst.Data[i];
+                string name = BitConverter.ToString(f.Name).Replace("-", "");
+
+                byte[] data = f.Value;
+                int len = f.Length - 16;
+                switch (name)
+                {
+                    case "A96E616D":
+                        tag.Title = Encode.GetString(data, 0, len);
+                        break;
+                    case "A9616C62":
+                        tag.Album = Encode.GetString(data, 0, len);
+                        break;
+                    case "A9415254":
+                        tag.Artist = Encode.GetString(data, 0, len);
+                        break;
+                    case "A967656E":
+                        tag.Genre = Encode.GetString(data, 0, len);
+                        break;
+                    case "A9646179":
+                        tag.Date = new DateTime(int.Parse(Encode.GetString(data, 0, len)), 1, 1);
+                        break;
+                    case "A96C7972":
+                        tag.Lyrics = Encode.GetString(data, 0, len);
+                        break;
+                    case "636F7672":
+                        tag.Image = data;
+                        tag.ImageMIMEType = ImageMIME.none;
+                        break;
+                    case "74726B6E":
+                        tag.Track = data[3];
+                        tag.TotalTrack = data[5];
+                        break;
+                    case "6469736B":
+                        tag.DiscNumber = data[3];
+                        tag.TotalDiscNumber = data[5];
+                        break;
+                }
+            }
+
+
+            return tag;
+        }
+
+        public void SetTag(RWTag.Tag Tag)
+        {
+            this.ilst.Data.Clear();
+
+            List<byte> ilst = new List<byte>();
+            ilst.AddRange(hdlr.ToBytes());
+
+            for(int i = 0; 9 > i; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        if(!string.IsNullOrEmpty(Tag.Title))
+
+                        break;
+                }
+            }
+        }
+
+        public override byte[] ToBytes()
+        {
+            List<byte> ret = new List<byte>();
+            byte[] sizeb = BitConverter.GetBytes(Length);
+            Array.Reverse(sizeb);
+            ret.AddRange(sizeb);
+            ret.AddRange(Encode.GetBytes(Name));
+            ret.AddRange(hdlr.ToBytes());
+            ret.AddRange(ilst.ToBytes());
+
+            return ret.ToArray();
+        }
+
         public Atom hdlr { get; set; }
         public ilstFrame ilst { get; set; }
     }
@@ -210,28 +299,57 @@ namespace RWTag.MP4
 
         private void Parse(MemoryStream ms)
         {
-            Data = new Dictionary<byte[], ilstAtom>();
+            Data = new List<ilstAtom>();
             int count = 0;
 
             byte[] sizeb = new byte[4];
             while(Length > count)
             {
-                ms.Read(sizeb, 0, 4);
+                if (ms.Read(sizeb, 0, 4) < 4)
+                    break;
+
+                count += 4;
                 Array.Reverse(sizeb);
                 int len = BitConverter.ToInt32(sizeb, 0);
 
+                if (len < 8)
+                    break;
+
                 byte[] bytes = new byte[len];
-                len += ms.Read(bytes, 0, len - 4);
+                ms.Read(bytes, 0, len - 4);
                 ilstAtom atom = new ilstAtom(Encode, bytes);
-                Data.Add(atom.Name, atom);
-                count += len;
+                Data.Add(atom);
+                count += len - 4;
             }
         }
 
         private Encoding Encode { get; set; }
         public int Length { get; set; }
         public string Name { get; set; }
-        public Dictionary<byte[], ilstAtom> Data { get; set; }
+        public List<ilstAtom> Data { get; set; }
+
+        public byte[] ToBytes()
+        {
+            Length = 0;
+            List<byte> bytes = new List<byte>();
+            for(int i = 0;Data.Count > i; i++)
+            {
+                byte[] ilstatom = Data[i].ToBytes();
+                bytes.AddRange(ilstatom);
+                Length += ilstatom.Length;
+            }
+
+            bytes.InsertRange(0, Encode.GetBytes(Name));
+
+            byte[] sb = new byte[4];
+            sb = BitConverter.GetBytes(Length);
+            Array.Reverse(sb);
+
+            bytes.InsertRange(0, sb);
+            Length += 8;
+
+            return bytes.ToArray();
+        }
 
         public class ilstAtom
         {
@@ -250,6 +368,8 @@ namespace RWTag.MP4
                 Array.Reverse(sizeb);
                 Length = BitConverter.ToInt32(sizeb, 0);
 
+                if (Length < 16)
+                    return;
 
                 ms.Seek(4, SeekOrigin.Current);
 
@@ -285,6 +405,11 @@ namespace RWTag.MP4
                 ret.AddRange(Value);
 
                 return ret.ToArray();
+            }
+
+            public int GetLength()
+            {
+                return ToBytes().Length;
             }
 
             public override string ToString()
