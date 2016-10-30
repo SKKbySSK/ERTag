@@ -233,7 +233,7 @@ namespace RWTag.MP4
             else
                 throw new TagReaderException("Failed to read meta data");
         }
-
+        
         private void Parse()
         {
             MemoryStream ms = new MemoryStream(Data, hdlrSpace, Length - hdlrSpace - 8);
@@ -474,14 +474,26 @@ namespace RWTag.MP4
                     if (Length < 16)
                         return;
 
-                    ms.Seek(4, SeekOrigin.Current);
+                    byte[] Type = new byte[4];
+                    ms.Read(Type, 0, 4);
+                    if(Type.SequenceEqual(new byte[] { 0x6D, 0x65, 0x61, 0x6E }))
+                    {
+                        this.Type = AtomType.mean;
 
-                    VersionAndFlags = new byte[4];
-                    ms.Read(VersionAndFlags, 0, 4);
-                    ms.Seek(4, SeekOrigin.Current);
+                        ms.Seek(0, SeekOrigin.Begin);
+                        Value = new byte[ms.Length];
+                        ms.Read(Value, 0, Value.Length);
+                    }
+                    else
+                    {
+                        this.Type = AtomType.data;
+                        VersionAndFlags = new byte[4];
+                        ms.Read(VersionAndFlags, 0, 4);
+                        ms.Seek(4, SeekOrigin.Current);
 
-                    Value = new byte[Length - 16];
-                    ms.Read(Value, 0, Length - 16);
+                        Value = new byte[Length - 16];
+                        ms.Read(Value, 0, Length - 16);
+                    }
                 }
             }
 
@@ -491,6 +503,10 @@ namespace RWTag.MP4
             public byte[] VersionAndFlags { get; set; }
             public byte[] Value { get; set; }
 
+            private AtomType Type { get; set; } = AtomType.data;
+
+            private enum AtomType { data, mean }
+
             public byte[] ToBytes()
             {
                 if (Encode.GetBytes("free").SequenceEqual(Name))
@@ -498,24 +514,37 @@ namespace RWTag.MP4
                     return null;
                 }
 
-                List<byte> ret = new List<byte>(Name);
-                
-                ret.AddRange(new byte[] { 0x64, 0x61, 0x74, 0x61 });
-                ret.AddRange(VersionAndFlags);
-                ret.AddRange(new byte[] { 0, 0, 0, 0 }); //4bytes free space
-                ret.AddRange(Value);
+                if (Type == AtomType.data)
+                {
+                    List<byte> ret = new List<byte>(Name);
+                    ret.AddRange(new byte[] { 0x64, 0x61, 0x74, 0x61 });
+                    ret.AddRange(VersionAndFlags);
+                    ret.AddRange(new byte[] { 0, 0, 0, 0 }); //4bytes free space
+                    ret.AddRange(Value);
 
-                byte[] minib = new byte[4];
-                minib = BitConverter.GetBytes(ret.Count);
-                Array.Reverse(minib);
-                ret.InsertRange(4, minib);
+                    byte[] minib = new byte[4];
+                    minib = BitConverter.GetBytes(ret.Count);
+                    Array.Reverse(minib);
+                    ret.InsertRange(4, minib);
 
-                byte[] sizeb = new byte[4];
-                sizeb = BitConverter.GetBytes(ret.Count + 4);
-                Array.Reverse(sizeb);
-                ret.InsertRange(0, sizeb);
+                    byte[] sizeb = new byte[4];
+                    sizeb = BitConverter.GetBytes(ret.Count + 4);
+                    Array.Reverse(sizeb);
+                    ret.InsertRange(0, sizeb);
 
-                return ret.ToArray();
+                    return ret.ToArray();
+                }
+                else
+                {
+                    byte[] ret = new byte[Value.Length + 4];
+                    byte[] sizeb = new byte[4];
+                    sizeb = BitConverter.GetBytes(ret.Length);
+                    Array.Reverse(sizeb);
+                    Array.Copy(sizeb, ret, 4);
+                    Array.Copy(Value, 0, ret, 4, Value.Length);
+
+                    return ret;
+                }
             }
 
             public int GetLength()
