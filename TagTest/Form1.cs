@@ -27,6 +27,11 @@ namespace TagTest
             RWTag.Tag tag = Reader.GetTag(new FileStream(textBox1.Text, FileMode.OpenOrCreate), ".m4a");
             Reader.Dispose();
 
+            tit.Text = tag.Title;
+            alb.Text = tag.Album;
+            art.Text = tag.Artist;
+            lyr.Text = tag.Lyrics;
+
             sw.Stop();
             label1.Text = sw.ElapsedMilliseconds.ToString();
 
@@ -97,6 +102,12 @@ namespace TagTest
             }
             sw.Stop();
             label2.Text = sw.ElapsedMilliseconds.ToString();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            byte[] text = Encoding.UTF8.GetBytes("21605");
+            Console.WriteLine(BitConverter.ToString(text));
         }
     }
 }

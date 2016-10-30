@@ -35,6 +35,7 @@
   <ItemGroup>
     <Reference Include="LAPP">
       <HintPath>..\..\LimpidAudioPlayer\LAPP\bin\Debug\LAPP.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -86,6 +87,7 @@
     <ProjectReference Include="..\ERTag\RWTag.csproj">
       <Project>{d6ef1df5-ccb6-41cf-8657-20d6dcd79d17}</Project>
       <Name>RWTag</Name>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -39,6 +39,11 @@
             this.label2 = new System.Windows.Forms.Label();
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.lyr = new System.Windows.Forms.TextBox();
+            this.art = new System.Windows.Forms.TextBox();
+            this.alb = new System.Windows.Forms.TextBox();
+            this.tit = new System.Windows.Forms.TextBox();
+            this.button4 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.SuspendLayout();
@@ -134,11 +139,58 @@
             this.pictureBox2.TabIndex = 9;
             this.pictureBox2.TabStop = false;
             // 
+            // lyr
+            // 
+            this.lyr.Location = new System.Drawing.Point(12, 259);
+            this.lyr.Name = "lyr";
+            this.lyr.Size = new System.Drawing.Size(166, 19);
+            this.lyr.TabIndex = 10;
+            this.lyr.Text = "Lyrics";
+            // 
+            // art
+            // 
+            this.art.Location = new System.Drawing.Point(12, 234);
+            this.art.Name = "art";
+            this.art.Size = new System.Drawing.Size(166, 19);
+            this.art.TabIndex = 11;
+            this.art.Text = "Artist";
+            // 
+            // alb
+            // 
+            this.alb.Location = new System.Drawing.Point(12, 209);
+            this.alb.Name = "alb";
+            this.alb.Size = new System.Drawing.Size(166, 19);
+            this.alb.TabIndex = 12;
+            this.alb.Text = "Album";
+            // 
+            // tit
+            // 
+            this.tit.Location = new System.Drawing.Point(12, 184);
+            this.tit.Name = "tit";
+            this.tit.Size = new System.Drawing.Size(166, 19);
+            this.tit.TabIndex = 13;
+            this.tit.Text = "Title";
+            // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(239, 145);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(75, 23);
+            this.button4.TabIndex = 14;
+            this.button4.Text = "Get";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(553, 312);
+            this.Controls.Add(this.button4);
+            this.Controls.Add(this.tit);
+            this.Controls.Add(this.alb);
+            this.Controls.Add(this.art);
+            this.Controls.Add(this.lyr);
             this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.textBox3);
             this.Controls.Add(this.label2);
@@ -170,6 +222,11 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.PictureBox pictureBox2;
+        private System.Windows.Forms.TextBox lyr;
+        private System.Windows.Forms.TextBox art;
+        private System.Windows.Forms.TextBox alb;
+        private System.Windows.Forms.TextBox tit;
+        private System.Windows.Forms.Button button4;
     }
 }
 

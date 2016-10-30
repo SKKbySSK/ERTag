@@ -51,14 +51,40 @@ namespace RWTag.MP4
                 meta.SetTag(Tag);
                 atoms.SetAtomByPath(meta, "moov/udta/meta");
             }
+            
+            UpdateSamples(atoms);
 
             Stream.Seek(0, SeekOrigin.Begin);
 
-            atoms.UpdateAtomData();
 
             int length = atoms.GetLength();
             Stream.SetLength(length);
             Stream.Write(atoms.ToBytes(), 0, length);
+        }
+
+        private void UpdateSamples(Atoms Atoms)
+        {
+            SampleAtom sample = new SampleAtom(Atoms.FindAtomByPath("mdat"),
+                Atoms.FindAtomByPath("moov/trak/mdia/minf/stbl/stco"), Atoms.FindAtomByPath("moov/trak/mdia/minf/stbl/stsz"));
+
+            Atoms.SetAtomByPath(sample.GetChunckOffsetAtom(), "moov/trak/mdia/minf/stbl/stco");
+        }
+
+        public Stream GetStream(RWTag.Tag Tag)
+        {
+            MemoryStream ms = new MemoryStream();
+            Atoms atoms = Parse(true);
+            Atom metaO = atoms.FindAtomByPath("moov/udta/meta");
+            if (metaO != null)
+            {
+                metaAtom meta = new metaAtom(metaO);
+                meta.SetTag(Tag);
+
+                byte[] bytes = meta.ToBytes();
+                ms.Write(bytes, 0, bytes.Length);
+            }
+
+            return ms;
         }
 
         public Atoms Parse(bool ReadData)
@@ -96,6 +122,7 @@ namespace RWTag.MP4
                 }
                 else
                 {
+                    Array.Reverse(header, 0, 4); //Atom生成時のサイズ計算で反転されるため
                     count = Atom.Length;
 
                     switch (Atom.Name)
