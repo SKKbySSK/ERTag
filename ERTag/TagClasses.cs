@@ -103,8 +103,10 @@ namespace RWTag
         {
             Tags = new List<BaseTag>(new BaseTag[] 
             {
-                new MP3.ID3v2.Tag(new SettableStream()), new MP3.ID3v1.Tag(new SettableStream()),
-                new MP4.Tag(new SettableStream())
+                new MP3.ID3v2.Tag(new SettableStream()),
+                new MP3.ID3v1.Tag(new SettableStream()),
+                new MP4.Tag(new SettableStream()),
+                new FLAC.Tag(new SettableStream())
             });
         }
         public TagPrioritizedCollection(BaseTag[] Tags) { this.Tags = new List<BaseTag>(Tags); }
