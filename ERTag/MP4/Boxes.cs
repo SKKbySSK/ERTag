@@ -12,26 +12,47 @@ namespace RWTag.MP4
     //cref=http://d.hatena.ne.jp/SofiyaCat/20080430
     public class Atoms : List<Atom>
     {
-        public Atom FindAtomByPath(string Path)
+        public Atoms() { }
+        public Atoms(IEnumerable<Atom> Atoms) : base(Atoms) { }
+
+        public Atoms FindAtomByPath(string Path)
         {
+            Func<IEnumerable<Atom>, string[], int, IEnumerable<Atom>> find = null;
+            find = (parents, to, index) =>
+            {
+                bool isLast = to.Length - 1 == index;
+                List<Atom> atoms = new List<Atom>();
+
+                if(index == 0)
+                {
+                    foreach (Atom parent in parents)
+                    {
+                        if (to[index] == parent.Name)
+                            atoms.Add(parent);
+                    }
+                }
+                else
+                {
+                    foreach (Atom parent in parents)
+                    {
+                        foreach(Atom child in parent.Children)
+                        {
+                            if (to[index] == child.Name)
+                                atoms.Add(child);
+                        }
+                    }
+                }
+
+                if (isLast)
+                    return atoms;
+                else
+                    return find(atoms, to, index + 1);
+            };
+
             string[] paths = Path.Split(new char[] { '/', '\\' },
                 StringSplitOptions.RemoveEmptyEntries);
 
-            Atoms Parent = this;
-            for(int i = 0;paths.Length > i; i++)
-            {
-                Atom ret = Find(paths[i], Parent);
-
-                if (paths.Length - 1 == i)
-                    return ret;
-
-                if (ret != null)
-                    Parent = ret.Children;
-                else
-                    return null;
-            }
-
-            return null;
+            return new Atoms(find(this, paths, 0));
         }
 
         public void SetAtomByPath(Atom Atom, string Path)
@@ -55,16 +76,6 @@ namespace RWTag.MP4
                 else
                     return;
             }
-        }
-
-        private Atom Find(string Name, Atoms Parent)
-        {
-            for(int i = 0;Parent.Count > i; i++)
-            {
-                if (Parent[i].Name == Name)
-                    return Parent[i];
-            }
-            return null;
         }
 
         public int FindIndex(string Name, Atoms Parent)
@@ -278,7 +289,8 @@ namespace RWTag.MP4
                         tag.Genre = Encode.GetString(data, 0, len);
                         break;
                     case "A9646179":
-                        tag.Date = new DateTime(int.Parse(Encode.GetString(data, 0, len)), 1, 1);
+                        string date = Encode.GetString(data, 0, len);
+                        tag.Date = ParseDate(date);
                         break;
                     case "A96C7972":
                         tag.Lyrics = Encode.GetString(data, 0, len);
@@ -300,6 +312,32 @@ namespace RWTag.MP4
 
 
             return tag;
+        }
+
+        DateTime ParseDate(string Date)
+        {
+            try
+            {
+                int time;
+                bool s = int.TryParse(Date, out time);
+                if (s)
+                {
+                    return new DateTime(time, 1, 1);
+                }
+                else
+                {
+                    DateTime dt;
+                    s = DateTime.TryParse(Date, out dt);
+                    if (s)
+                        return dt;
+                    else
+                        return DateTime.MinValue;
+                }
+            }
+            catch(Exception)
+            {
+                return DateTime.MinValue;
+            }
         }
 
         public void SetTag(RWTag.Tag Tag)

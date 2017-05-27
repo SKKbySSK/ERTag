@@ -26,10 +26,10 @@ namespace RWTag.MP4
             RWTag.Tag tag = new RWTag.Tag();
 
             Atoms atoms = Parse(false);
-            Atom metaO = atoms.FindAtomByPath("moov/udta/meta");
-            if(metaO != null)
+            Atoms metaO = atoms.FindAtomByPath("moov/udta/meta");
+            if(metaO.Count >= 1)
             {
-                metaAtom meta = new metaAtom(metaO);
+                metaAtom meta = new metaAtom(metaO[0]);
                 tag = meta.GetTag();
             }
 
@@ -44,10 +44,10 @@ namespace RWTag.MP4
         public override void Write(RWTag.Tag Tag)
         {
             Atoms atoms = Parse(true);
-            Atom metaO = atoms.FindAtomByPath("moov/udta/meta");
-            if (metaO != null)
+            Atoms metaO = atoms.FindAtomByPath("moov/udta/meta");
+            if (metaO.Count >= 1)
             {
-                metaAtom meta = new metaAtom(metaO);
+                metaAtom meta = new metaAtom(metaO[0]);
                 meta.SetTag(Tag);
                 atoms.SetAtomByPath(meta, "moov/udta/meta");
             }
@@ -64,8 +64,8 @@ namespace RWTag.MP4
 
         private void UpdateSamples(Atoms Atoms)
         {
-            SampleAtom sample = new SampleAtom(Atoms.FindAtomByPath("mdat"),
-                Atoms.FindAtomByPath("moov/trak/mdia/minf/stbl/stco"), Atoms.FindAtomByPath("moov/trak/mdia/minf/stbl/stsz"));
+            SampleAtom sample = new SampleAtom(Atoms.FindAtomByPath("mdat")[0],
+                Atoms.FindAtomByPath("moov/trak/mdia/minf/stbl/stco")[0], Atoms.FindAtomByPath("moov/trak/mdia/minf/stbl/stsz")[0]);
 
             Atoms.SetAtomByPath(sample.GetChunckOffsetAtom(), "moov/trak/mdia/minf/stbl/stco");
         }
@@ -74,10 +74,10 @@ namespace RWTag.MP4
         {
             MemoryStream ms = new MemoryStream();
             Atoms atoms = Parse(true);
-            Atom metaO = atoms.FindAtomByPath("moov/udta/meta");
-            if (metaO != null)
+            Atoms metaO = atoms.FindAtomByPath("moov/udta/meta");
+            if (metaO.Count >= 1)
             {
-                metaAtom meta = new metaAtom(metaO);
+                metaAtom meta = new metaAtom(metaO[0]);
                 meta.SetTag(Tag);
 
                 byte[] bytes = meta.ToBytes();

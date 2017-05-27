@@ -21,18 +21,17 @@ namespace TagTest
         private void button1_Click(object sender, EventArgs e)
         {
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-
             RWTag.TagReader Reader = new RWTag.TagReader();
-            RWTag.Tag tag = Reader.GetTag(new FileStream(textBox1.Text, FileMode.OpenOrCreate), ".m4a");
+            sw.Start();
+            RWTag.Tag tag = Reader.GetTag(new FileStream(textBox1.Text, FileMode.Open, FileAccess.Read), Path.GetExtension(textBox1.Text));
             Reader.Dispose();
+            sw.Stop();
 
             tit.Text = tag.Title;
             alb.Text = tag.Album;
             art.Text = tag.Artist;
             lyr.Text = tag.Lyrics;
 
-            sw.Stop();
             label1.Text = sw.ElapsedMilliseconds.ToString();
 
             if (tag.Image != null) pictureBox1.Image = (Image)new ImageConverter().ConvertFrom(tag.Image);
@@ -84,21 +83,13 @@ namespace TagTest
             string[] files = Directory.GetFiles(textBox2.Text, "*.m4a");
 
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-            foreach (string f in files)
-            {
-                RWTag.TagReader Reader = new RWTag.TagReader();
-                RWTag.Tag tag = Reader.GetTag(new FileStream(f, FileMode.OpenOrCreate), Path.GetExtension(f));
-                Reader.Dispose();
-            }
-            sw.Stop();
-            label1.Text = sw.ElapsedMilliseconds.ToString();
-
             sw.Reset();
             sw.Start();
+            RWTag.TagReader Reader = new RWTag.TagReader();
             foreach (string f in files)
             {
-                LAPP.MTag.Tag tag = LAPP.MTag.TagReader.GetTag(f);
+                RWTag.Tag tag = Reader.GetTag(new FileStream(textBox1.Text, FileMode.OpenOrCreate), Path.GetExtension(textBox1.Text));
+                Reader.Dispose();
             }
             sw.Stop();
             label2.Text = sw.ElapsedMilliseconds.ToString();
@@ -108,6 +99,15 @@ namespace TagTest
         {
             byte[] text = Encoding.UTF8.GetBytes("21605");
             Console.WriteLine(BitConverter.ToString(text));
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            if(ofd.ShowDialog() == DialogResult.OK)
+            {
+                textBox1.Text = ofd.FileName;
+            }
         }
     }
 }
