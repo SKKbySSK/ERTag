@@ -282,9 +282,15 @@ namespace RWTag
         public abstract string[] Extensions { get; }
         public abstract Tag Read();
         public abstract void Write(Tag Tag);
+        
+        protected virtual void Release()
+        {
+
+        }
 
         public void Dispose()
         {
+            Release();
             Stream.Dispose();
         }
     }

@@ -23,7 +23,7 @@ namespace RWTag.FLAC
 
         public void Dispose()
         {
-            br.Dispose();
+            br?.Dispose();
             br = null;
 
             stream.Dispose();

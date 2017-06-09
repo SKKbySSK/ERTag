@@ -8,10 +8,8 @@ namespace RWTag.FLAC
 {
     public class Tag : BaseTag
     {
-        Reader reader;
         public Tag(SettableStream Stream) : base(Stream)
         {
-            reader = new Reader(Stream, Encoding.UTF8);
         }
 
         public override string[] Extensions { get; } = new string[] { ".flac" };
@@ -24,6 +22,7 @@ namespace RWTag.FLAC
         public override RWTag.Tag Read()
         {
             RWTag.Tag tag = new RWTag.Tag();
+            Reader reader = new Reader(Stream, Encoding.UTF8);
             reader.Init();
 
             foreach(MetadataBlock block in reader.Blocks)
@@ -39,6 +38,9 @@ namespace RWTag.FLAC
                         break;
                 }
             }
+
+            reader.Dispose();
+            reader = null;
 
             return tag;
         }
