@@ -2,11 +2,20 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 namespace RWTag.MP3.ID3v2
 {
     internal class Three : ID3v2Reader
     {
+        [Flags]
+        public enum HeaderFlag
+        {
+            Unsynchronisation = 0b10000000,
+            ExtendedHeader = 0b01000000,
+            ExperimentalIndicator = 0b00100000
+        }
+
         private const byte SynchsafeDefault = 0;
 
         public Three(Stream Stream, Encoding Encode) : base(Stream, Encode)
@@ -18,11 +27,12 @@ namespace RWTag.MP3.ID3v2
             RWTag.Tag tag = new RWTag.Tag();
             tag.Data = new Dictionary<string, object>();
             tag.Date = new DateTime();
-
+            
             Stream.Seek(3, SeekOrigin.Begin);
             tag.Name = "ID3v2." + Stream.ReadByte() + "." + Stream.ReadByte();
 
-            int size = TotalTagSize;
+            ParseFlag(Stream.ReadByte());
+            int size = ReadSynchsafe();
             Stream.Seek(10, SeekOrigin.Begin);
             BinaryReader br = new BinaryReader(Stream, Encode, true);
             List<Frame> Frames = Parse(br, size);
@@ -32,7 +42,8 @@ namespace RWTag.MP3.ID3v2
             {
                 try
                 {
-                    tag.Data.Add(Frames[i].ID, Frames[i]);
+                    Frame f = Frames[i];
+                    tag.Data[f.ID] = f;
                     StringFrame sf = Frames[i] as StringFrame;
                     if (sf != null)
                     {
@@ -96,6 +107,18 @@ namespace RWTag.MP3.ID3v2
             br.Dispose();
 
             return tag;
+        }
+
+        private void ParseFlag(int bits)
+        {
+            HeaderFlag flag = (HeaderFlag)bits;
+            if (flag.HasFlag(HeaderFlag.ExtendedHeader))
+            {
+                byte[] buffer = new byte[4];
+                Stream.Read(buffer, 0, 4);
+                int size = BitConverter.ToInt32(buffer, 0);
+                Stream.Seek(size, SeekOrigin.Current);
+            }
         }
 
         public override void Write(RWTag.Tag Tag, byte[] RawData)
@@ -187,14 +210,14 @@ namespace RWTag.MP3.ID3v2
                     {
                         try
                         {
-                            string ID = Utils.ByteConverter.GetString(fid, Encode).Trim(new char[] { '\0' });
+                            string ID = EncodingProvider.UTF8.GetString(fid, 0, 4).Trim('\0');
                             if (ID.Length < 4) break;
                             Frame f = new Frame();
                             f.ID = ID;
-
                             //v2.3はSynchsafeでない
-                            f.Size = Utils.ByteConverter.GetIntFromHexadecimal(br, 4);
-
+                            byte[] s = br.ReadBytes(4);
+                            Array.Reverse(s);
+                            f.Size = BitConverter.ToInt32(s, 0);
                             f.Flag = br.ReadBytes(2);
                             f.Data = br.ReadBytes(f.Size);
 
@@ -276,7 +299,7 @@ namespace RWTag.MP3.ID3v2
 
             private Encoding GetISO88591()
             {
-                return Encoding.GetEncoding("ISO-8859-1");
+                return EncodingProvider.ISO88591;
             }
 
             private void UpdateFrame()
@@ -361,12 +384,12 @@ namespace RWTag.MP3.ID3v2
                     bool s = int.TryParse(tex, out num);
                     bool appendNULL = false;
 
-                    Encode = Encoding.Unicode;
+                    Encode = EncodingProvider.Unicode;
                     if (!s)
                     {
                         if (ID == "TRCK" || ID == "TPOS")
                         {
-                            Encode = Encoding.GetEncoding("ISO-8859-1");
+                            Encode = EncodingProvider.ISO88591;
                             BOM = BOM.Unknwon;
                             appendNULL = true;
                         }
@@ -382,7 +405,7 @@ namespace RWTag.MP3.ID3v2
                     else
                     {
                         Dbytes.Add(0);
-                        Encode = Encoding.GetEncoding("ISO-8859-1");
+                        Encode = EncodingProvider.ISO88591;
                     }
 
                     Dbytes.AddRange(Encode.GetBytes(tex));

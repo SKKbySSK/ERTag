@@ -13,7 +13,7 @@ namespace RWTag
         jpeg, png, bmp, gif, none
     }
 
-    public struct Tag
+    public class Tag
     {
         public string Name { get; set; }
         public string Title { get; set; }
@@ -39,13 +39,6 @@ namespace RWTag
         public TagReader(BaseTag[] Tags) { Collection = new TagPrioritizedCollection(Tags); }
         public TagPrioritizedCollection Collection { get; set; }
 
-        public void Dispose()
-        {
-            for(int i = 0;Collection.Count > i; i++)
-            {
-                Collection[i].Dispose();
-            }
-        }
 
         public Tag GetTag(Stream Stream, string Extension)
         {
@@ -94,6 +87,34 @@ namespace RWTag
                 catch (Exception) { }
             }
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    foreach (BaseTag reader in Collection)
+                    {
+                        reader.Dispose();
+                    }
+                    Collection.Clear();
+                    GC.SuppressFinalize(true);
+                }
+
+                disposedValue = true;
+            }
+        }
+        
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 
     public class TagPrioritizedCollection : ICollection<BaseTag>
@@ -271,7 +292,7 @@ namespace RWTag
         public BaseTag(SettableStream Stream) { this.Stream = Stream; }
         public BaseTag(Stream BaseStream) { Stream = new SettableStream(BaseStream); }
 
-        public Encoding Encode { get; protected set; } = Encoding.Unicode;
+        public Encoding Encode { get; protected set; } = EncodingProvider.Unicode;
 
         public virtual void SetStream(Stream Stream)
         {
@@ -288,11 +309,30 @@ namespace RWTag
 
         }
 
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    Release();
+                    Stream.Dispose();
+                    Stream = null;
+                }
+                disposedValue = true;
+            }
+        }
+        
         public void Dispose()
         {
-            Release();
-            Stream.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
+        #endregion
+
     }
     
     public class TagReaderException : Exception

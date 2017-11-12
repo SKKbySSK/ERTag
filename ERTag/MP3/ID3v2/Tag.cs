@@ -10,7 +10,7 @@ namespace RWTag.MP3.ID3v2
     {
         public Tag(SettableStream Stream) : base(Stream)
         {
-            Encode = Encoding.GetEncoding("shift-jis");
+            Encode = EncodingProvider.ShiftJis;
         }
 
         public enum Version { v2_2, v2_3, v2_4, Unknown }
@@ -158,16 +158,12 @@ namespace RWTag.MP3.ID3v2
 
         protected Stream Stream { get; set; }
 
-        protected int TotalTagSize
+        protected int ReadSynchsafe()
         {
-            get
-            {
-                Stream.Seek(6, SeekOrigin.Begin);
-                byte[] buf = new byte[4];
-                Stream.Read(buf, 0, 4);
-                int size = Utils.ByteConverter.GetIntFromSynchsafe(buf);
-                return size;
-            }
+            byte[] buf = new byte[4];
+            Stream.Read(buf, 0, 4);
+            int size = Utils.ByteConverter.GetIntFromSynchsafe(buf);
+            return size;
         }
 
         public abstract RWTag.Tag Read();
@@ -229,22 +225,22 @@ namespace RWTag.MP3.ID3v2
                 switch (Byte)
                 {
                     case 0:
-                        return Encoding.GetEncoding("ISO-8859-1");
+                        return EncodingProvider.ISO88591;
 
                     case 1:
-                        return Encoding.Unicode;
+                        return EncodingProvider.Unicode;
 
                     case 2:
-                        return Encoding.BigEndianUnicode;
+                        return EncodingProvider.BigEndianUnicode;
 
                     case 3:
-                        return Encoding.UTF8;
+                        return EncodingProvider.UTF8;
 
                     default:
-                        return Encoding.GetEncoding("shift-jis");
+                        return EncodingProvider.ShiftJis;
                 }
             }
-            catch (Exception) { return Encoding.GetEncoding("shift-jis"); }
+            catch (Exception) { return EncodingProvider.ShiftJis; }
         }
 
         protected byte GetEncode(Encoding Encode)
