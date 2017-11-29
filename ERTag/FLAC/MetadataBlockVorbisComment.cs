@@ -19,7 +19,7 @@ namespace RWTag.FLAC
             VendorLength = BitConverter.ToInt32(Block.Data, i);
             i += 4;
 
-            VendorString = Encoding.UTF8.GetString(Block.Data, i, VendorLength);
+            VendorString = EncodingProvider.UTF8.GetString(Block.Data, i, VendorLength);
             i += VendorLength;
 
             CommentCount = BitConverter.ToInt32(Block.Data, i);
@@ -31,7 +31,7 @@ namespace RWTag.FLAC
                 int cl = BitConverter.ToInt32(Block.Data, i);
                 i += 4;
 
-                Comments[c] = Encoding.UTF8.GetString(Block.Data, i, cl);
+                Comments[c] = EncodingProvider.UTF8.GetString(Block.Data, i, cl);
                 i += cl;
             }
 

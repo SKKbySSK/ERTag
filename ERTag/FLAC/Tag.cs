@@ -22,7 +22,7 @@ namespace RWTag.FLAC
         public override RWTag.Tag Read()
         {
             RWTag.Tag tag = new RWTag.Tag();
-            Reader reader = new Reader(Stream, Encoding.UTF8);
+            Reader reader = new Reader(Stream, EncodingProvider.UTF8);
             reader.Init();
 
             foreach(MetadataBlock block in reader.Blocks)

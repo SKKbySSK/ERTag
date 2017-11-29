@@ -14,7 +14,7 @@ namespace RWTag.MP3.ID3v1
 
         public override string[] Extensions { get; } = new string[] { ".mp3" };
 
-        public Tag(SettableStream Stream) : base(Stream) { Encode = Encoding.GetEncoding("shift-jis"); }
+        public Tag(SettableStream Stream) : base(Stream) { Encode = EncodingProvider.ShiftJis; }
 
         public enum Version { v1, v1_1, Unknown }
         public Version GetVersion()
