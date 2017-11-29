@@ -32,14 +32,14 @@ namespace RWTag.FLAC
             MimeLength = BitConverter.ToInt32(Block.Data, i);
             i += 4;
 
-            Mime = EncodingProvider.UTF8.GetString(Block.Data, i, MimeLength);
+            Mime = Encoding.UTF8.GetString(Block.Data, i, MimeLength);
             i += MimeLength;
             
             Array.Reverse(Block.Data, i, 4);
             DescriptionLength = BitConverter.ToInt32(Block.Data, i);
             i += 4;
 
-            Description = EncodingProvider.UTF8.GetString(Block.Data, i, DescriptionLength);
+            Description = Encoding.UTF8.GetString(Block.Data, i, DescriptionLength);
             i += DescriptionLength;
 
             Array.Reverse(Block.Data, i, 4);

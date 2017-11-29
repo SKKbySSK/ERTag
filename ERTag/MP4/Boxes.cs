@@ -10,7 +10,6 @@ namespace RWTag.MP4
     //cref=http://atomicparsley.sourceforge.net/mpeg-4files.html
     //cref=http://www.mp4ra.org/atoms.html
     //cref=http://d.hatena.ne.jp/SofiyaCat/20080430
-    [System.Runtime.InteropServices.ComVisible(false)]
     public class Atoms : List<Atom>
     {
         public Atoms() { }

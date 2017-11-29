@@ -12,7 +12,7 @@ namespace RWTag.MP4
     {
         public Regex AtomNameRegex { get; set; } = new Regex("^[a-z][a-z][a-z][a-z]$");
 
-        public Tag(SettableStream Stream) : base(Stream) { Encode = EncodingProvider.UTF8; }
+        public Tag(SettableStream Stream) : base(Stream) { Encode = Encoding.UTF8; }
 
         public override string[] Extensions { get; } = new string[] { ".mp4", ".m4a" };
 
