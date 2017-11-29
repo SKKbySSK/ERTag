@@ -41,13 +41,10 @@ namespace RWTag.MP3.ID3v2
             switch (GetVersion())
             {
                 case Version.v2_3:
+                case Version.v2_2:
+                case Version.v2_4:
                     Three three = new Three(Stream, Encode);
                     tag = three.Read();
-                    break;
-
-                default:
-                    Three def = new Three(Stream, Encode);
-                    tag = def.Read();
                     break;
             }
 

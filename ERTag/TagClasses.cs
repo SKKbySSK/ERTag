@@ -55,19 +55,34 @@ namespace RWTag
             {
                 try
                 {
-                    for(int j = 0;Collection[i].Extensions.Length > j; j++)
+                    if(Collection[i].Extensions.Select(tex => tex.ToLower()).Contains(ext))
                     {
-                        string sup = Collection[i].Extensions[j].ToLower();
-                        if (ext == sup)
-                        {
-                            Collection[i].SetStream(Stream);
-                            tag = Collection[i].Read();
-                            if (!string.IsNullOrEmpty(tag.Name)) return tag;
-                        }
-
+                        Collection[i].SetStream(Stream);
+                        tag = Collection[i].Read();
+                        if (!string.IsNullOrEmpty(tag.Name)) return tag;
                     }
                 }
                 catch (Exception) { }
+            }
+
+            return tag;
+        }
+
+        public Tag GetTag(Stream Stream)
+        {
+            Tag tag = new Tag();
+            for (int i = 0; Collection.Count > i; i++)
+            {
+                try
+                {
+                    Collection[i].SetStream(Stream);
+                    tag = Collection[i].Read();
+                    if (!string.IsNullOrEmpty(tag.Name)) return tag;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.Message);
+                }
             }
 
             return tag;

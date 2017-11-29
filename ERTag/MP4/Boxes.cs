@@ -136,9 +136,9 @@ namespace RWTag.MP4
         {
             this.Encode = Encode;
             this.Offset = Offset;
+            Name = Encode.GetString(Header, 4, 4);
             Array.Reverse(Header, 0, 4);
             Length = BitConverter.ToInt32(Header, 0);
-            Name = Encode.GetString(Header, 4, 4);
         }
 
         public Atom(Encoding Encode, long Offset, byte[] Length, byte[] Name)

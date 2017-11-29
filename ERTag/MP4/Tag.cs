@@ -89,7 +89,7 @@ namespace RWTag.MP4
 
         public Atoms Parse(bool ReadData)
         {
-            Stream.Seek(0, SeekOrigin.Begin);
+            long pos = Stream.Seek(0, SeekOrigin.Begin);
 
             Atoms atoms = new Atoms();
 
